@@ -3,23 +3,14 @@ from fastapi.responses import HTMLResponse
 from lingua import Language, LanguageDetectorBuilder
 import wikipedia
 import pyjokes
-from pydantic import BaseModel
 from requests import exceptions
 from fastapi import HTTPException
+from models import PostResponse, Coordinates
 
 app = FastAPI()
 
 languages = [Language.ENGLISH, Language.FRENCH, Language.GERMAN, Language.SPANISH, Language.RUSSIAN]
 detector = LanguageDetectorBuilder.from_languages(*languages).build()
-
-
-class Coordinates(BaseModel):
-    latitude: float
-    longtitude: float
-
-
-class PostResponse(BaseModel):
-    cities: list[str]
 
 
 @app.get("/")
