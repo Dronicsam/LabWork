@@ -17,6 +17,10 @@ class Coordinates(BaseModel):
     longtitude: float
 
 
+class ForPost(BaseModel):
+    coord: list
+
+
 @app.get("/")
 def main():
     return f"Joker says: {pyjokes.get_joke()}"
