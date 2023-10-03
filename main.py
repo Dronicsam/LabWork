@@ -5,6 +5,7 @@ import wikipedia
 import pyjokes
 from pydantic import BaseModel
 from requests import exceptions
+from fastapi import HTTPException
 
 app = FastAPI()
 
@@ -15,6 +16,10 @@ detector = LanguageDetectorBuilder.from_languages(*languages).build()
 class Coordinates(BaseModel):
     latitude: float
     longtitude: float
+
+
+class PostResponse(BaseModel):
+    cities: list[str]
 
 
 @app.get("/")
@@ -38,7 +43,7 @@ def path_to_wiki(name: str):
 
 
 @app.get('/ptwq/{name}', response_class=HTMLResponse)
-def path_to_wiki(name: str, long: bool = False):
+def path_to_wiki_query(name: str, long: bool = False):
     try:
         check_lang = detector.detect_language_of(name)
         lang = str(check_lang)[9:11].lower()
@@ -50,12 +55,13 @@ def path_to_wiki(name: str, long: bool = False):
         result = wikipedia.page(name).content
         return str(result).replace("\n", "<br/>")
     except exceptions.ConnectionError:
-        return f"This page doesn`t exits or you`ve misspelled it :^("
+        raise HTTPException(404, detail="This page doesn`t exits or you`ve misspelled it :^(")
 
 
-@app.post('/coordinates')
+@app.post('/coordinates', response_model=PostResponse)
 def wikigeo(coordinates: Coordinates):
     try:
-        return wikipedia.geosearch(coordinates.latitude, coordinates.longtitude)
+        response = PostResponse(cities=wikipedia.geosearch(coordinates.latitude, coordinates.longtitude))
+        return response
     except exceptions.ConnectionError:
-        return f"I can`t find anything with this coordinates"
+        raise HTTPException(404, detail="I can`t find anything")
